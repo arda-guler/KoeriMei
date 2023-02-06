@@ -4,6 +4,7 @@ from OpenGL.GLU import *
 import glfw
 import keyboard
 import time
+from datetime import datetime
 
 import koeri
 from globe import Earth_globe
@@ -86,13 +87,16 @@ def mei():
     increase_strafe_speed = "T"
 
     update_koeri_btn = "V"
+    export_data_btn = "N"
 
     cam_rotate_speed = 0.2
     cam_strafe_speed = 10
 
     speed_control_lock = False
     update_koeri_lock = False
+    export_data_lock = False
     last_update_time = None
+    last_export_time = None
 
     print("Starting...")
 
@@ -125,10 +129,37 @@ def mei():
             last_update_time = current_time()
             print("Earthquake data updated.")
             update_koeri_lock = True
-        elif keyboard.is_pressed(update_koeri_btn) and not (current_time() - last_update_time > 30):
+        elif (not update_koeri_lock) and keyboard.is_pressed(update_koeri_btn) and not (current_time() - last_update_time > 30):
             print("WARNING: Data update cancelled. DO NOT SPAM KOERI SERVERS! (Wait", str(30-(current_time() - last_update_time)), "seconds.)")
+            update_koeri_lock = True
         elif update_koeri_lock and not keyboard.is_pressed(update_koeri_btn):
             update_koeri_lock = False
+
+        if keyboard.is_pressed(export_data_btn) and (not export_data_lock) and (last_export_time == None or (current_time() - last_export_time > 30)):
+            # export KOERI website as-is, because we can parse those anyway
+            print("Reading latest data from KOERI...")
+            export_data_list = koeri.read_koeri_list()
+            export_data = ""
+            for element in export_data_list:
+                export_data += str(element)
+            current_time_str = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+            export_filename = "KOERI_" + current_time_str + ".txt"
+
+            print("Exporting data to: " + export_filename)
+            export_file = open(export_filename, "w")
+            export_file.write(export_data)
+            export_file.close()
+
+            print("Data export complete.")
+            export_data_lock = True
+            last_export_time = current_time()
+
+        elif (not export_data_lock) and keyboard.is_pressed(export_data_btn) and not (current_time() - last_export_time > 30):
+            print("WARNING: Data fetch cancelled. DO NOT SPAM KOERI SERVERS! (Wait", str(30-(current_time() - last_export_time)), "seconds.)")
+            export_data_lock = True
+
+        elif export_data_lock and not keyboard.is_pressed(export_data_btn):
+            export_data_lock = False
         
         glfw.poll_events()
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
