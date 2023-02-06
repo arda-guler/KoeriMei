@@ -28,4 +28,4 @@ G - decrease camera speed
 
 V - update data (The program automatically loads latest data at start, you shouldn't need to use this.)
 
-B - export latest earthquake data to .txt for later reference
+N - export latest earthquake data to .txt for later reference
